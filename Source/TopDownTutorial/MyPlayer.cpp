@@ -4,6 +4,9 @@
 #include "MyPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "EnhancedInputComponent.h"
+#include "InputActionValue.h"
+#include "EnhancedInputSubsystems.h"
 
 // Sets default values
 AMyPlayer::AMyPlayer()
@@ -29,6 +32,8 @@ AMyPlayer::AMyPlayer()
 void AMyPlayer::BeginPlay()
 {
 	Super::BeginPlay();
+
+
 	
 }
 
@@ -39,10 +44,38 @@ void AMyPlayer::Tick(float DeltaTime)
 
 }
 
+void AMyPlayer::NotifyControllerChanged()
+{
+	Super::NotifyControllerChanged();
+
+	// Add Input Mapping Context
+	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		{
+			Subsystem->AddMappingContext(DefaultMappingContext, 0);
+		}
+	}
+
+}
+
 // Called to bind functionality to input
 void AMyPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
+	{
+		// Moving
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMyPlayer::Move);
+
+	}
+}
+
+
+
+void AMyPlayer::Move(const FInputActionValue& Value)
+{
+	UE_LOG(LogTemp, Log, TEXT("Move"));
 }
 
