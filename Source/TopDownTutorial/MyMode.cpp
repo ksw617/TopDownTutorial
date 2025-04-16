@@ -3,6 +3,7 @@
 
 #include "MyMode.h"
 #include "MyPlayer.h"
+#include "MyPlayerController.h"
 #include "UObject/ConstructorHelpers.h"
 
 AMyMode::AMyMode()
@@ -13,5 +14,12 @@ AMyMode::AMyMode()
 	if (PlayerPawnBPClass.Class != NULL)
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
+	}
+
+	// set default pawn class to our Blueprinted character
+	static ConstructorHelpers::FClassFinder<APlayerController> PlayerControllerBPClass(TEXT("/Game/Blueprints/BP_MyPlayerController"));
+	if (PlayerControllerBPClass.Class != NULL)
+	{
+		PlayerControllerClass = PlayerControllerBPClass.Class;
 	}
 }
