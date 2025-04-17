@@ -10,6 +10,16 @@
 
 AMyPlayerController::AMyPlayerController()
 {
+	//마우스 커서를 보이도록 설정
+	bShowMouseCursor = true;
+	//기본 마우스 커서 모양 설정
+	DefaultMouseCursor = EMouseCursor::Default;
+	//캐시된 목적지 벡터를 초기화 (월드 좌표의 시작점)
+	CachedDestination = FVector::ZeroVector;
+	//누름 지속 시간을 0으로 초기화
+	FollowTime = 0.f;
+
+	
 }
 
 void AMyPlayerController::BeginPlay()
@@ -31,64 +41,27 @@ void AMyPlayerController::SetupInputComponent()
 
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
 	{
-		// Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &AMyPlayerController::Jump);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &AMyPlayerController::StopJumping);
-
-
-		// Moving
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMyPlayerController::Move);
-		// Looking
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMyPlayerController::Look);
+		// SetDestinationClickAction
+		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Started, this, &AMyPlayerController::OnInputStarted);
+		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Triggered, this, &AMyPlayerController::OnSetDestinationTriggered);
+		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Completed, this, &AMyPlayerController::OnSetDestinationReleased);
+		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Canceled, this, &AMyPlayerController::OnSetDestinationReleased);
+		
 
 	}
 }
 
-void AMyPlayerController::Move(const FInputActionValue& Value)
+void AMyPlayerController::OnInputStarted()
 {
-	// input is a Vector2D
-	FVector2D MovementVector = Value.Get<FVector2D>();
-
-
-	// find out which way is forward
-	const FRotator Rotation = GetControlRotation();
-	const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-	// get forward vector
-	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-	// get right vector
-	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-	APawn* ControlledPawn = GetPawn();
-
-	// add movement 
-	ControlledPawn->AddMovementInput(ForwardDirection, MovementVector.Y);
-	ControlledPawn->AddMovementInput(RightDirection, MovementVector.X);
-
-
-
+	UE_LOG(LogTemp, Log, TEXT("OnInputStarted"));
 }
 
-void AMyPlayerController::Look(const FInputActionValue& Value)
+void AMyPlayerController::OnSetDestinationTriggered()
 {
-	// input is a Vector2D
-	FVector2D LookAxisVector = Value.Get<FVector2D>();
-	APawn* ControlledPawn = GetPawn();
-
-	// add yaw and pitch input to controller
-	ControlledPawn->AddControllerYawInput(LookAxisVector.X);
-	ControlledPawn->AddControllerPitchInput(LookAxisVector.Y);
-
+	UE_LOG(LogTemp, Log, TEXT("OnSetDestinationTriggered"));
 }
 
-void AMyPlayerController::Jump()
+void AMyPlayerController::OnSetDestinationReleased()
 {
-	AMyPlayer* MyPlayer = Cast<AMyPlayer>(GetPawn());
-	MyPlayer->Jump();
-}
-
-void AMyPlayerController::StopJumping()
-{
-	auto* MyPlayer = Cast<AMyPlayer>(GetPawn());
-	MyPlayer->StopJumping();
+	UE_LOG(LogTemp, Log, TEXT("OnSetDestinationReleased"));
 }
