@@ -7,6 +7,10 @@
 #include "InputActionValue.h"
 #include "MyPlayer.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Blueprint/AIBlueprintHelperLibrary.h"
+#include "NiagaraFunctionLibrary.h"
+
+
 
 AMyPlayerController::AMyPlayerController()
 {
@@ -53,15 +57,42 @@ void AMyPlayerController::SetupInputComponent()
 
 void AMyPlayerController::OnInputStarted()
 {
-	UE_LOG(LogTemp, Log, TEXT("OnInputStarted"));
+	StopMovement();
 }
 
 void AMyPlayerController::OnSetDestinationTriggered()
 {
-	UE_LOG(LogTemp, Log, TEXT("OnSetDestinationTriggered"));
+	FollowTime += GetWorld()->GetDeltaSeconds();
+
+	FHitResult Hit;
+
+	bool bHitSuccessful = false;
+
+	bHitSuccessful = GetHitResultUnderCursor(ECollisionChannel::ECC_Visibility, true, Hit);
+
+	if (bHitSuccessful)
+	{
+		CachedDestination = Hit.Location;
+	}
+
+	APawn* ControlledPawn = GetPawn();
+	if (ControlledPawn != nullptr)
+	{
+		FVector WorldDirection = (CachedDestination - ControlledPawn->GetActorLocation()).GetSafeNormal();
+		ControlledPawn->AddMovementInput(WorldDirection, 1.0, false);
+
+	}
+
 }
 
 void AMyPlayerController::OnSetDestinationReleased()
 {
-	UE_LOG(LogTemp, Log, TEXT("OnSetDestinationReleased"));
+	if (FollowTime <= ShortPressThreshold)
+	{
+		UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, CachedDestination);
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, FXCursor, CachedDestination);
+	
+	}
+
+	FollowTime = 0.f;
 }
